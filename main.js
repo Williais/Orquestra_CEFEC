@@ -1,13 +1,8 @@
-// Importamos a função 'createClient' do Supabase
-// E AGORA, importamos as nossas chaves diretamente do nosso ficheiro config.js
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
 // Inicializamos o Supabase imediatamente com as chaves importadas.
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-
-// --- O RESTANTE DO CÓDIGO PERMANECE IGUAL ---
 
 // Variável para guardar a lista de músicas localmente para a pesquisa
 let localMusicList = [];

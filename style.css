@@ -1,0 +1,427 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+/* --- CSS Reset & Variáveis de Tema --- */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --background-color: #f8f9fa;
+    --surface-color: #ffffff;
+    --text-color: #212529;
+    --text-muted-color: #6c757d;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --font-family: 'Inter', sans-serif;
+}
+
+body.dark-mode {
+    --primary-color: #3b82f6;
+    --secondary-color: #9ca3af;
+    --background-color: #111827;
+    --surface-color: #1f2937;
+    --text-color: #f9fafb;
+    --text-muted-color: #9ca3af;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* --- Estrutura Principal & Utilitários --- */
+.app-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* --- Header --- */
+.app-header {
+    background-color: var(--surface-color);
+    padding: 1rem;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.orchestra-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.theme-switcher {
+    background: none;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+/* --- Lista de Músicas --- */
+#music-list {
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.music-card {
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.music-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px var(--shadow-color);
+}
+
+.music-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.music-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.music-card h5 {
+    font-size: 0.9rem;
+    color: var(--text-muted-color);
+    font-weight: 400;
+}
+
+.music-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.music-card-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.music-card-menu {
+    position: absolute;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: 0.5rem 0;
+    right: 1.5rem;
+    margin-top: 2rem;
+    z-index: 5;
+}
+
+.music-card-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.music-card-menu button:hover {
+    background-color: var(--background-color);
+}
+
+.music-card-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--background-color);
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-button {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.listen-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.download-btn {
+    background-color: transparent;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.listen-btn:disabled {
+        background-color: var(--secondary-color);
+        cursor: not-allowed;
+}
+
+
+/* --- Botão Flutuante --- */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    font-size: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+}
+
+/* --- Tela de Detalhes (Partituras) --- */
+#details-view {
+    padding-top: 1rem;
+}
+
+.details-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.back-btn {
+    background: none;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+#details-title {
+    font-size: 1.5rem;
+}
+
+.instrument-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.instrument-selector label {
+    font-weight: 500;
+    color: var(--text-muted-color);
+}
+
+.instrument-selector select {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--secondary-color);
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+#pdf-viewer {
+    width: 100%;
+    height: 70vh;
+    border: 1px solid var(--secondary-color);
+    border-radius: 8px;
+}
+
+.no-pdf {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted-color);
+}
+
+/* --- Modal de Adicionar/Editar Música --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+}
+
+.modal-content {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h3 {
+    font-size: 1.5rem;
+}
+
+.close-modal-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted-color);
+        cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input, .form-group .file-drop-area {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.file-drop-area {
+    border-style: dashed;
+    text-align: center;
+    color: var(--text-muted-color);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+#save-music-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.audio-player-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--surface-color-light);
+    border-top: 1px solid var(--border-color-light);
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    z-index: 1500;
+    transition: transform 0.3s ease-in-out;
+}
+body.dark-mode .audio-player-container {
+    background-color: var(--surface-color-dark);
+    border-top-color: var(--border-color-dark);
+}
+.audio-player-container.hidden {
+    transform: translateY(100%);
+}
+#now-playing {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#now-playing i {
+    color: var(--primary-color);
+}
+#audio-player {
+    flex-grow: 1;
+    max-width: 500px; /* Limita a largura em telas grandes */
+}
+.close-player-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-muted-color-light);
+    cursor: pointer;
+    padding: 0 0 0 1rem;
+}
+body.dark-mode .close-player-btn {
+    color: var(--text-muted-color-dark);
+}

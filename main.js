@@ -1,8 +1,11 @@
+// Importamos a função 'createClient' do Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
-// Inicializamos o Supabase imediatamente com as chaves importadas.
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Declaramos a variável supabase aqui, mas não a inicializamos ainda.
+// Ela vai esperar que a página e o config.js carreguem completamente.
+let supabase;
+
+// --- O RESTANTE DO CÓDIGO ---
 
 // Variável para guardar a lista de músicas localmente para a pesquisa
 let localMusicList = [];
@@ -40,6 +43,10 @@ const closePlayerBtn = document.getElementById('close-player-btn');
 
 // Função para buscar e renderizar as músicas
 async function fetchAndRenderMusic() {
+    if (!supabase) {
+        console.error("Cliente Supabase não inicializado.");
+        return;
+    }
     console.log("Buscando músicas no Supabase...");
     const { data: musicas, error } = await supabase
         .from('musicas')
@@ -57,13 +64,17 @@ async function fetchAndRenderMusic() {
     renderMusicList(localMusicList);
 }
 
-// Listener em tempo real para as músicas
-supabase.channel('public:musicas')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'musicas' }, payload => {
-    console.log('Mudança detectada no banco de dados, atualizando lista.');
-    fetchAndRenderMusic();
-  })
-  .subscribe();
+// Função para configurar o listener em tempo real
+function setupRealtimeListener() {
+    if (!supabase) return;
+    supabase.channel('public:musicas')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'musicas' }, payload => {
+        console.log('Mudança detectada no banco de dados, atualizando lista.');
+        fetchAndRenderMusic();
+      })
+      .subscribe();
+}
+
 
 // Função para renderizar a lista de músicas na tela
 function renderMusicList(musicas) {
@@ -331,18 +342,25 @@ musicForm.addEventListener('submit', async (e) => {
 
 // --- INICIALIZAÇÃO E FUNCIONALIDADES ADICIONAIS ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Agora que o Supabase é inicializado no topo do arquivo,
-    // só precisamos de chamar as funções que dependem dele.
-    
-    // Verificação inicial para dar um feedback claro ao utilizador
-    if (!supabase) {
-        initialMessage.innerHTML = `<p style="color: red; font-weight: bold;">ERRO: Falha ao carregar as configurações do Supabase. Verifique o arquivo config.js e a conexão.</p>`;
+    console.log("DOM totalmente carregado. Iniciando a aplicação.");
+
+    try {
+        // Inicializamos o Supabase lendo as variáveis globais do objeto 'window'.
+        // Isto garante que o config.js já foi executado.
+        supabase = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        
+        // Agora que o supabase está inicializado, podemos carregar os dados e configurar o listener.
+        fetchAndRenderMusic();
+        setupRealtimeListener();
+
+    } catch(e) {
+        console.error("ERRO FATAL: Falha ao inicializar o Supabase. Verifique se o arquivo 'config.js' está correto e sendo carregado.", e);
+        initialMessage.innerHTML = `<p style="color: red; font-weight: bold;">ERRO: As credenciais do Supabase não foram configuradas corretamente. Verifique o arquivo 'config.js'.</p>`;
         initialMessage.style.display = 'block';
         return;
     }
 
-    fetchAndRenderMusic();
-    
+
     // PWA Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

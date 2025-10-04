@@ -1,3 +1,11 @@
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = (window.CONFIG ?? window);
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Config ausente: verifique se config.js foi carregado antes do main.js');
+}
+
+supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // Importamos a função 'createClient' do Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 

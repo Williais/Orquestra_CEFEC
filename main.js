@@ -263,12 +263,15 @@ musicForm.addEventListener('submit', async (e) => {
 
         const uploadPromises = [];
         if (signedUrls.audio) {
-            // *** CORREÇÃO APLICADA AQUI ***
             const { token, signedUrl } = signedUrls.audio;
             uploadPromises.push(
+                // *** CORREÇÃO CRUCIAL AQUI: O método é 'PUT' ***
                 fetch(signedUrl, {
-                    method: 'PUT', // Supabase Signed Uploads usam PUT
-                    headers: { 'Authorization': `Bearer ${token}` },
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': audioFileInput.files[0].type
+                    },
                     body: audioFileInput.files[0]
                 }).then(res => { if (!res.ok) throw new Error('Falha no upload do áudio.')})
             );
@@ -276,13 +279,16 @@ musicForm.addEventListener('submit', async (e) => {
         }
         if (signedUrls.pdfs) {
             signedUrls.pdfs.forEach(pdfUrlData => {
-                 // *** CORREÇÃO APLICADA AQUI ***
                 const { token, signedUrl } = pdfUrlData;
                 const originalFile = pdfFilesInput.files[pdfUrlData.originalFileIndex];
                 uploadPromises.push(
+                    // *** CORREÇÃO CRUCIAL AQUI: O método é 'PUT' ***
                     fetch(signedUrl, {
-                        method: 'PUT', // Supabase Signed Uploads usam PUT
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/pdf' },
+                        method: 'PUT',
+                        headers: { 
+                            'Authorization': `Bearer ${token}`, 
+                            'Content-Type': 'application/pdf' 
+                        },
                         body: originalFile
                     }).then(res => { if (!res.ok) throw new Error(`Falha no upload do PDF: ${originalFile.name}`)})
                 );

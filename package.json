@@ -1,0 +1,9 @@
+{
+  "name": "orquestra-pwa-backend",
+  "version": "1.0.0",
+  "description": "Funções serverless para o PWA da Orquestra",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "busboy": "^1.6.0"
+  }
+}

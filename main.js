@@ -27,7 +27,6 @@ const musicForm = document.getElementById('music-form');
 const modalTitle = document.getElementById('modal-title');
 const musicIdInput = document.getElementById('music-id');
 
-// --- LÓGICA DE DADOS E RENDERIZAÇÃO ---
 async function fetchAndRenderMusic() {
     initialMessage.innerHTML = '<p>Carregando músicas...</p>';
     initialMessage.style.display = 'block';
@@ -118,7 +117,6 @@ function closeModal() {
     document.getElementById('current-pdfs-list').innerHTML = '';
 }
 
-// --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderMusic();
     if ('serviceWorker' in navigator) {
@@ -248,7 +246,6 @@ musicForm.addEventListener('submit', async (e) => {
         let musicData = { id, title, arranger };
 
         // 1. PEDIR AS PERMISSÕES DE UPLOAD (SIGNED URLS)
-        console.log("Passo 1: Pedindo permissões de upload...");
         const filesToRequest = { title };
         if (audioFileInput.files[0]) {
             filesToRequest.audioFile = { name: audioFileInput.files[0].name };
@@ -266,29 +263,30 @@ musicForm.addEventListener('submit', async (e) => {
         const { signedUrls, filePaths } = await urlResponse.json();
 
         // 2. FAZER UPLOAD DOS FICHEIROS DIRETAMENTE PARA O SUPABASE
-        console.log("Passo 2: Fazendo upload dos ficheiros...");
         const uploadPromises = [];
         if (signedUrls.audio) {
-            const { token, url, path } = signedUrls.audio;
+            // CORREÇÃO AQUI: A propriedade é 'signedUrl', não 'url'.
+            const { token, signedUrl } = signedUrls.audio;
             uploadPromises.push(
-                fetch(url, {
+                fetch(signedUrl, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: audioFileInput.files[0]
-                })
+                }).then(res => { if (!res.ok) throw new Error('Falha no upload do áudio.')})
             );
             musicData.audioPath = filePaths.audio;
         }
         if (signedUrls.pdfs) {
             signedUrls.pdfs.forEach(pdfUrlData => {
-                const { token, url } = pdfUrlData;
+                 // CORREÇÃO AQUI: A propriedade é 'signedUrl', não 'url'.
+                const { token, signedUrl } = pdfUrlData;
                 const originalFile = pdfFilesInput.files[pdfUrlData.originalFileIndex];
                 uploadPromises.push(
-                    fetch(url, {
+                    fetch(signedUrl, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/pdf' },
                         body: originalFile
-                    })
+                    }).then(res => { if (!res.ok) throw new Error(`Falha no upload do PDF: ${originalFile.name}`)})
                 );
             });
             musicData.partiturasPaths = filePaths.pdfs;
@@ -297,7 +295,6 @@ musicForm.addEventListener('submit', async (e) => {
         await Promise.all(uploadPromises);
 
         // 3. SALVAR OS DADOS DA MÚSICA NO BANCO DE DADOS
-        console.log("Passo 3: Salvando os dados da música...");
         const saveResponse = await fetch('/.netlify/functions/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

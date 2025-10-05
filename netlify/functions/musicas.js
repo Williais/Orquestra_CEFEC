@@ -12,10 +12,9 @@ function slugify(text) {
 
 exports.handler = async function(event, context) {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY; // A chave segura!
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // --- LÓGICA PARA LER MÚSICAS (GET) ---
     if (event.httpMethod === 'GET') {
         try {
             const { data, error } = await supabase.from('musicas').select('*').order('title', { ascending: true });
@@ -31,7 +30,6 @@ exports.handler = async function(event, context) {
             const payload = JSON.parse(event.body);
             const { action } = payload;
 
-            // --- AÇÃO: GERAR PERMISSÕES DE UPLOAD ---
             if (action === 'generate-signed-urls') {
                 const { audioFile, pdfFiles, title } = payload;
                 const signedUrls = {};
@@ -63,12 +61,25 @@ exports.handler = async function(event, context) {
                 return { statusCode: 200, body: JSON.stringify({ signedUrls, filePaths }) };
             }
 
-            // --- AÇÃO: SALVAR OS DADOS DA MÚSICA DEPOIS DO UPLOAD ---
             if (action === 'save-music') {
-                const { musicData } = payload;
-                const { id } = musicData;
-                let responseData;
+                let { musicData } = payload;
+                const { id, audioPath, partiturasPaths } = musicData;
 
+                // CORREÇÃO AQUI: Geramos as URLs públicas a partir dos caminhos
+                if (audioPath) {
+                    const { data } = supabase.storage.from('arquivos').getPublicUrl(audioPath);
+                    musicData.audioUrl = data.publicUrl;
+                }
+                if (partiturasPaths) {
+                    musicData.partituras = {};
+                    for (const instrumentName in partiturasPaths) {
+                        const path = partiturasPaths[instrumentName];
+                        const { data } = supabase.storage.from('arquivos').getPublicUrl(path);
+                        musicData.partituras[instrumentName] = data.publicUrl;
+                    }
+                }
+                
+                let responseData;
                 if (id && id !== 'undefined' && id !== 'null') {
                     const { data, error } = await supabase.from('musicas').update(musicData).eq('id', id).select().single();
                     if (error) throw error;
@@ -90,7 +101,6 @@ exports.handler = async function(event, context) {
         }
     }
 
-    // --- LÓGICA PARA APAGAR MÚSICAS (DELETE) ---
     if (event.httpMethod === 'DELETE') {
         try {
             const { id, audioPath, partiturasPaths } = JSON.parse(event.body);

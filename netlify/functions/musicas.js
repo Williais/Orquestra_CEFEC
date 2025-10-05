@@ -65,13 +65,12 @@ exports.handler = async function(event, context) {
                 let { musicData } = payload;
                 const { id, audioPath, partiturasPaths } = musicData;
 
-                // CORREÇÃO AQUI: Geramos as URLs públicas a partir dos caminhos
                 if (audioPath) {
                     const { data } = supabase.storage.from('arquivos').getPublicUrl(audioPath);
                     musicData.audioUrl = data.publicUrl;
                 }
                 if (partiturasPaths) {
-                    musicData.partituras = {};
+                    musicData.partituras = musicData.partituras || {};
                     for (const instrumentName in partiturasPaths) {
                         const path = partiturasPaths[instrumentName];
                         const { data } = supabase.storage.from('arquivos').getPublicUrl(path);
@@ -81,7 +80,7 @@ exports.handler = async function(event, context) {
                 
                 let responseData;
                 if (id && id !== 'undefined' && id !== 'null') {
-                    // Se for uma edição, precisamos de fundir os dados antigos com os novos
+                    // *** CORREÇÃO AQUI: Fundimos os dados antigos com os novos ***
                     const { data: oldData } = await supabase.from('musicas').select('*').eq('id', id).single();
                     const finalData = { ...oldData, ...musicData };
                     const { data, error } = await supabase.from('musicas').update(finalData).eq('id', id).select().single();

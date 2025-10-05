@@ -245,7 +245,6 @@ musicForm.addEventListener('submit', async (e) => {
 
         let musicData = { id, title, arranger };
 
-        // 1. PEDIR AS PERMISSÕES DE UPLOAD (SIGNED URLS)
         const filesToRequest = { title };
         if (audioFileInput.files[0]) {
             filesToRequest.audioFile = { name: audioFileInput.files[0].name };
@@ -262,14 +261,13 @@ musicForm.addEventListener('submit', async (e) => {
         if (!urlResponse.ok) throw new Error('Falha ao gerar URLs de upload.');
         const { signedUrls, filePaths } = await urlResponse.json();
 
-        // 2. FAZER UPLOAD DOS FICHEIROS DIRETAMENTE PARA O SUPABASE
         const uploadPromises = [];
         if (signedUrls.audio) {
-            // CORREÇÃO AQUI: A propriedade é 'signedUrl', não 'url'.
+            // *** CORREÇÃO APLICADA AQUI ***
             const { token, signedUrl } = signedUrls.audio;
             uploadPromises.push(
                 fetch(signedUrl, {
-                    method: 'POST',
+                    method: 'PUT', // Supabase Signed Uploads usam PUT
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: audioFileInput.files[0]
                 }).then(res => { if (!res.ok) throw new Error('Falha no upload do áudio.')})
@@ -278,12 +276,12 @@ musicForm.addEventListener('submit', async (e) => {
         }
         if (signedUrls.pdfs) {
             signedUrls.pdfs.forEach(pdfUrlData => {
-                 // CORREÇÃO AQUI: A propriedade é 'signedUrl', não 'url'.
+                 // *** CORREÇÃO APLICADA AQUI ***
                 const { token, signedUrl } = pdfUrlData;
                 const originalFile = pdfFilesInput.files[pdfUrlData.originalFileIndex];
                 uploadPromises.push(
                     fetch(signedUrl, {
-                        method: 'POST',
+                        method: 'PUT', // Supabase Signed Uploads usam PUT
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/pdf' },
                         body: originalFile
                     }).then(res => { if (!res.ok) throw new Error(`Falha no upload do PDF: ${originalFile.name}`)})
@@ -294,7 +292,6 @@ musicForm.addEventListener('submit', async (e) => {
 
         await Promise.all(uploadPromises);
 
-        // 3. SALVAR OS DADOS DA MÚSICA NO BANCO DE DADOS
         const saveResponse = await fetch('/.netlify/functions/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

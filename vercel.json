@@ -1,13 +1,12 @@
 
+
 {
   "version": 2,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "style.css", "use": "@vercel/static" },
-    { "src": "main.js", "use": "@vercel/static" },
-    { "src": "service-worker.js", "use": "@vercel/static" },
-    { "src": "manifest.json", "use": "@vercel/static" },
-    { "src": "images/**", "use": "@vercel/static" }
+    {
+      "src": "*",
+      "use": "@vercel/static"
+    }
   ],
-  "buildCommand": "printf \"window.CONFIG=Object.freeze({SUPABASE_URL:'%s',SUPABASE_ANON_KEY:'%s'});\" \"$SUPABASE_URL\" \"$SUPABASE_ANON_KEY\" > config.js"
+  "buildCommand": "echo \"window.SUPABASE_URL = '${SUPABASE_URL}'; window.SUPABASE_ANON_KEY = '${SUPABASE_ANON_KEY}';\" > config.js"
 }

@@ -1,21 +1,14 @@
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = (window.CONFIG ?? window);
+// const { SUPABASE_URL, SUPABASE_ANON_KEY } = (window.CONFIG ?? window);
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Config ausente: verifique se config.js foi carregado antes do main.js');
-}
+// if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+//   throw new Error('Config ausente: verifique se config.js foi carregado antes do main.js');
+// }
 
-supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Importamos a função 'createClient' do Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Declaramos a variável supabase aqui, mas não a inicializamos ainda.
-// Ela vai esperar que a página e o config.js carreguem completamente.
-let supabase;
-
-// --- O RESTANTE DO CÓDIGO ---
-
-// Variável para guardar a lista de músicas localmente para a pesquisa
 let localMusicList = [];
 
 // Função para "limpar" nomes de arquivos, removendo acentos e caracteres especiais.

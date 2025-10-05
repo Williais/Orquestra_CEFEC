@@ -1,6 +1,6 @@
 // Importamos as ferramentas necessárias para o nosso backend
 const { createClient } = require('@supabase/supabase-js');
-const parser = require('lambda-multipart-parser'); // A NOVA FERRAMENTA, MAIS ROBUSTA
+const parser = require('lambda-multipart-parser');
 
 // Função para "limpar" nomes de arquivos
 function slugify(text) {
@@ -26,6 +26,7 @@ exports.handler = async function(event, context) {
             if (error) throw error;
             return { statusCode: 200, body: JSON.stringify(data) };
         } catch (error) {
+            console.error("[GET Error]", error);
             return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
         }
     }
@@ -33,9 +34,9 @@ exports.handler = async function(event, context) {
     // --- LÓGICA PARA CRIAR/ATUALIZAR MÚSICAS (POST) ---
     if (event.httpMethod === 'POST') {
         try {
-            // Usamos a nova ferramenta para processar o formulário. É muito mais simples.
+            // Usamos a nova ferramenta para processar o formulário.
             const result = await parser.parse(event);
-            const { id, title, arranger } = result; // Os campos vêm diretamente no 'result'
+            const { id, title, arranger } = result;
             const files = result.files;
             
             let musicData = { title, arranger };
@@ -46,10 +47,9 @@ exports.handler = async function(event, context) {
 
             for (const file of files) {
                 const sanitizedFileName = slugify(file.filename);
-                // A biblioteca organiza os ficheiros de forma diferente, por isso verificamos o 'fieldname'
                 if (file.fieldname === 'audioFile') {
                     const filePath = `audio/${Date.now()}_${sanitizedFileName}`;
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true });
+                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true, contentType: file.contentType });
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
                     musicData.audioUrl = urlData.publicUrl;
@@ -58,7 +58,7 @@ exports.handler = async function(event, context) {
                     const instrumentName = file.filename.replace(/\.pdf$/i, '').trim();
                     const sanitizedTitle = slugify(title);
                     const filePath = `partituras/${sanitizedTitle}/${sanitizedFileName}`;
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true });
+                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true, contentType: 'application/pdf' });
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
                     
@@ -84,7 +84,7 @@ exports.handler = async function(event, context) {
             return { statusCode: 200, body: JSON.stringify(responseData) };
 
         } catch (error) {
-            console.error("[ERRO NA FUNÇÃO POST]:", error);
+            console.error("[POST Error]", error);
             return { statusCode: 500, body: JSON.stringify({ error: `Erro Interno do Servidor: ${error.message}` }) };
         }
     }
@@ -108,6 +108,7 @@ exports.handler = async function(event, context) {
 
             return { statusCode: 200, body: JSON.stringify({ message: 'Música apagada com sucesso' }) };
         } catch (error) {
+            console.error("[DELETE Error]", error);
             return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
         }
     }

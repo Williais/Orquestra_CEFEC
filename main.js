@@ -1,4 +1,3 @@
-// --- ESTE FICHEIRO NÃO CONHECE O SUPABASE ---
 let localMusicList = [];
 
 function slugify(text) {
@@ -9,24 +8,6 @@ function slugify(text) {
     .replace(/\s+/g, '-').replace(p, c => b.charAt(a.indexOf(c)))
     .replace(/&/g, '-and-').replace(/[^\w\-.]+/g, '')
     .replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
-}
-
-// Função auxiliar para ler um ficheiro e convertê-lo para Base64
-function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            // A parte do resultado que nos interessa é o que vem depois da vírgula
-            const base64String = reader.result.split(',')[1];
-            resolve({
-                filename: file.name,
-                contentType: file.type,
-                content: base64String
-            });
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
 }
 
 const musicListContainer = document.getElementById('music-list');
@@ -57,7 +38,6 @@ async function fetchAndRenderMusic() {
             throw new Error(err.error || 'Erro de rede');
         }
         const musicas = await response.json();
-
         localMusicList = musicas;
         renderMusicList(localMusicList);
     } catch (error) {
@@ -142,19 +122,12 @@ function closeModal() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderMusic();
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js');
-        });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('/service-worker.js'); });
     }
     const themeSwitcherBtn = document.getElementById('theme-switcher-btn');
     function applyTheme(theme) {
-        if (theme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeSwitcherBtn.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            document.body.classList.remove('dark-mode');
-            themeSwitcherBtn.innerHTML = '<i class="fas fa-moon"></i>';
-        }
+        document.body.classList.toggle('dark-mode', theme === 'dark');
+        themeSwitcherBtn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     }
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
@@ -266,34 +239,71 @@ musicForm.addEventListener('submit', async (e) => {
     loadingIndicator.classList.remove('hidden');
 
     try {
-        const payload = {
-            id: document.getElementById('music-id').value,
-            title: document.getElementById('music-title').value,
-            arranger: document.getElementById('music-arranger').value,
-            pdfFiles: []
-        };
+        const id = document.getElementById('music-id').value;
+        const title = document.getElementById('music-title').value;
+        const arranger = document.getElementById('music-arranger').value;
+        const audioFileInput = document.getElementById('music-audio');
+        const pdfFilesInput = document.getElementById('music-pdfs');
 
-        const audioFile = document.getElementById('music-audio').files[0];
-        if (audioFile) {
-            payload.audioFile = await readFileAsBase64(audioFile);
+        let musicData = { id, title, arranger };
+
+        // 1. PEDIR AS PERMISSÕES DE UPLOAD (SIGNED URLS)
+        console.log("Passo 1: Pedindo permissões de upload...");
+        const filesToRequest = { title };
+        if (audioFileInput.files[0]) {
+            filesToRequest.audioFile = { name: audioFileInput.files[0].name };
+        }
+        if (pdfFilesInput.files.length > 0) {
+            filesToRequest.pdfFiles = Array.from(pdfFilesInput.files).map((file, index) => ({ name: file.name, originalFileIndex: index }));
         }
 
-        const pdfFiles = Array.from(document.getElementById('music-pdfs').files);
-        if (pdfFiles.length > 0) {
-            const pdfPromises = pdfFiles.map(file => readFileAsBase64(file));
-            payload.pdfFiles = await Promise.all(pdfPromises);
-        }
-        
-        const response = await fetch('/.netlify/functions/musicas', {
+        const urlResponse = await fetch('/.netlify/functions/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ action: 'generate-signed-urls', ...filesToRequest })
         });
+        if (!urlResponse.ok) throw new Error('Falha ao gerar URLs de upload.');
+        const { signedUrls, filePaths } = await urlResponse.json();
 
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error);
+        // 2. FAZER UPLOAD DOS FICHEIROS DIRETAMENTE PARA O SUPABASE
+        console.log("Passo 2: Fazendo upload dos ficheiros...");
+        const uploadPromises = [];
+        if (signedUrls.audio) {
+            const { token, url, path } = signedUrls.audio;
+            uploadPromises.push(
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: audioFileInput.files[0]
+                })
+            );
+            musicData.audioPath = filePaths.audio;
         }
+        if (signedUrls.pdfs) {
+            signedUrls.pdfs.forEach(pdfUrlData => {
+                const { token, url } = pdfUrlData;
+                const originalFile = pdfFilesInput.files[pdfUrlData.originalFileIndex];
+                uploadPromises.push(
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/pdf' },
+                        body: originalFile
+                    })
+                );
+            });
+            musicData.partiturasPaths = filePaths.pdfs;
+        }
+
+        await Promise.all(uploadPromises);
+
+        // 3. SALVAR OS DADOS DA MÚSICA NO BANCO DE DADOS
+        console.log("Passo 3: Salvando os dados da música...");
+        const saveResponse = await fetch('/.netlify/functions/musicas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save-music', musicData })
+        });
+        if (!saveResponse.ok) throw new Error('Falha ao salvar os dados da música.');
 
         alert('Música salva com sucesso!');
         closeModal();
@@ -301,6 +311,7 @@ musicForm.addEventListener('submit', async (e) => {
 
     } catch (error) {
         alert(`Ocorreu um erro ao salvar a música: ${error.message}`);
+        console.error("Erro detalhado no processo de salvar:", error);
     } finally {
         saveBtn.disabled = false;
         loadingIndicator.classList.add('hidden');

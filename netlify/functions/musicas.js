@@ -81,7 +81,10 @@ exports.handler = async function(event, context) {
                 
                 let responseData;
                 if (id && id !== 'undefined' && id !== 'null') {
-                    const { data, error } = await supabase.from('musicas').update(musicData).eq('id', id).select().single();
+                    // Se for uma edição, precisamos de fundir os dados antigos com os novos
+                    const { data: oldData } = await supabase.from('musicas').select('*').eq('id', id).single();
+                    const finalData = { ...oldData, ...musicData };
+                    const { data, error } = await supabase.from('musicas').update(finalData).eq('id', id).select().single();
                     if (error) throw error;
                     responseData = data;
                 } else {

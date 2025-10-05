@@ -11,6 +11,24 @@ function slugify(text) {
     .replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 }
 
+// Função auxiliar para ler um ficheiro e convertê-lo para Base64
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            // A parte do resultado que nos interessa é o que vem depois da vírgula
+            const base64String = reader.result.split(',')[1];
+            resolve({
+                filename: file.name,
+                contentType: file.type,
+                content: base64String
+            });
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
 const musicListContainer = document.getElementById('music-list');
 const mainView = document.getElementById('main-view');
 const detailsView = document.getElementById('details-view');
@@ -247,31 +265,40 @@ musicForm.addEventListener('submit', async (e) => {
     saveBtn.disabled = true;
     loadingIndicator.classList.remove('hidden');
 
-    const formData = new FormData();
-    formData.append('id', document.getElementById('music-id').value);
-    formData.append('title', document.getElementById('music-title').value);
-    formData.append('arranger', document.getElementById('music-arranger').value);
-
-    const audioFile = document.getElementById('music-audio').files[0];
-    if (audioFile) formData.append('audioFile', audioFile);
-
-    const pdfFiles = document.getElementById('music-pdfs').files;
-    for (const file of pdfFiles) {
-        formData.append('pdfFiles[]', file);
-    }
-    
     try {
+        const payload = {
+            id: document.getElementById('music-id').value,
+            title: document.getElementById('music-title').value,
+            arranger: document.getElementById('music-arranger').value,
+            pdfFiles: []
+        };
+
+        const audioFile = document.getElementById('music-audio').files[0];
+        if (audioFile) {
+            payload.audioFile = await readFileAsBase64(audioFile);
+        }
+
+        const pdfFiles = Array.from(document.getElementById('music-pdfs').files);
+        if (pdfFiles.length > 0) {
+            const pdfPromises = pdfFiles.map(file => readFileAsBase64(file));
+            payload.pdfFiles = await Promise.all(pdfPromises);
+        }
+        
         const response = await fetch('/.netlify/functions/musicas', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
+
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.error);
         }
+
         alert('Música salva com sucesso!');
         closeModal();
         fetchAndRenderMusic();
+
     } catch (error) {
         alert(`Ocorreu um erro ao salvar a música: ${error.message}`);
     } finally {

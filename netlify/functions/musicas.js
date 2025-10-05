@@ -1,6 +1,5 @@
-// Importamos as ferramentas necessárias para o nosso backend
+// Importamos apenas a ferramenta do Supabase
 const { createClient } = require('@supabase/supabase-js');
-const parser = require('lambda-multipart-parser');
 
 // Função para "limpar" nomes de arquivos
 function slugify(text) {
@@ -34,10 +33,9 @@ exports.handler = async function(event, context) {
     // --- LÓGICA PARA CRIAR/ATUALIZAR MÚSICAS (POST) ---
     if (event.httpMethod === 'POST') {
         try {
-            // Usamos a nova ferramenta para processar o formulário.
-            const result = await parser.parse(event);
-            const { id, title, arranger } = result;
-            const files = result.files;
+            // O corpo do pedido agora é um JSON simples.
+            const payload = JSON.parse(event.body);
+            const { id, title, arranger, audioFile, pdfFiles } = payload;
             
             let musicData = { title, arranger };
             if (id && id !== 'undefined' && id !== 'null') {
@@ -45,25 +43,32 @@ exports.handler = async function(event, context) {
                 musicData = { ...data, ...musicData };
             }
 
-            for (const file of files) {
-                const sanitizedFileName = slugify(file.filename);
-                if (file.fieldname === 'audioFile') {
-                    const filePath = `audio/${Date.now()}_${sanitizedFileName}`;
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true, contentType: file.contentType });
-                    if (error) throw error;
-                    const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
-                    musicData.audioUrl = urlData.publicUrl;
-                    musicData.audioPath = filePath;
-                } else if (file.fieldname === 'pdfFiles[]') {
+            // Se um ficheiro de áudio foi enviado
+            if (audioFile && audioFile.content) {
+                // Convertemos o texto Base64 de volta para um ficheiro (Buffer)
+                const audioBuffer = Buffer.from(audioFile.content, 'base64');
+                const sanitizedFileName = slugify(audioFile.filename);
+                const filePath = `audio/${Date.now()}_${sanitizedFileName}`;
+                const { error } = await supabase.storage.from('arquivos').upload(filePath, audioBuffer, { upsert: true, contentType: audioFile.contentType });
+                if (error) throw error;
+                const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
+                musicData.audioUrl = urlData.publicUrl;
+                musicData.audioPath = filePath;
+            }
+
+            // Se ficheiros PDF foram enviados
+            if (pdfFiles && pdfFiles.length > 0) {
+                 musicData.partituras = musicData.partituras || {};
+                 musicData.partiturasPaths = musicData.partiturasPaths || {};
+                for (const file of pdfFiles) {
+                    const pdfBuffer = Buffer.from(file.content, 'base64');
                     const instrumentName = file.filename.replace(/\.pdf$/i, '').trim();
+                    const sanitizedFileName = slugify(file.filename);
                     const sanitizedTitle = slugify(title);
                     const filePath = `partituras/${sanitizedTitle}/${sanitizedFileName}`;
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true, contentType: 'application/pdf' });
+                    const { error } = await supabase.storage.from('arquivos').upload(filePath, pdfBuffer, { upsert: true, contentType: 'application/pdf' });
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
-                    
-                    musicData.partituras = musicData.partituras || {};
-                    musicData.partiturasPaths = musicData.partiturasPaths || {};
                     musicData.partituras[instrumentName] = urlData.publicUrl;
                     musicData.partiturasPaths[instrumentName] = filePath;
                 }
@@ -91,21 +96,18 @@ exports.handler = async function(event, context) {
 
     // --- LÓGICA PARA APAGAR MÚSICAS (DELETE) ---
     if (event.httpMethod === 'DELETE') {
+        // (Esta parte já estava correta e não precisa de alterações)
         try {
             const { id, audioPath, partiturasPaths } = JSON.parse(event.body);
             if (!id) throw new Error("ID da música é obrigatório para apagar.");
-
             const filesToDelete = [];
             if (audioPath) filesToDelete.push(audioPath);
             if (partiturasPaths) filesToDelete.push(...Object.values(partiturasPaths));
-
             if (filesToDelete.length > 0) {
                 await supabase.storage.from('arquivos').remove(filesToDelete);
             }
-
             const { error } = await supabase.from('musicas').delete().eq('id', id);
             if (error) throw error;
-
             return { statusCode: 200, body: JSON.stringify({ message: 'Música apagada com sucesso' }) };
         } catch (error) {
             console.error("[DELETE Error]", error);

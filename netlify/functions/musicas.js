@@ -1,6 +1,6 @@
 // Importamos as ferramentas necessárias para o nosso backend
 const { createClient } = require('@supabase/supabase-js');
-const Busboy = require('busboy');
+const parser = require('lambda-multipart-parser'); // A NOVA FERRAMENTA, MAIS ROBUSTA
 
 // Função para "limpar" nomes de arquivos
 function slugify(text) {
@@ -11,50 +11,6 @@ function slugify(text) {
     .replace(/\s+/g, '-').replace(p, c => b.charAt(a.indexOf(c)))
     .replace(/&/g, '-and-').replace(/[^\w\-.]+/g, '')
     .replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
-}
-
-// Função auxiliar CORRIGIDA para processar formulários com arquivos
-function parseMultipartForm(event) {
-    return new Promise((resolve, reject) => {
-        const fields = {};
-        const files = [];
-        
-        // Os cabeçalhos da Netlify podem ter letras maiúsculas/minúsculas diferentes.
-        const contentType = event.headers['content-type'] || event.headers['Content-Type'];
-        if (!contentType) {
-            return reject(new Error('Cabeçalho Content-Type em falta'));
-        }
-
-        const busboy = Busboy({ headers: { 'content-type': contentType } });
-
-        busboy.on('file', (fieldname, file, info) => {
-            const { filename } = info;
-            const chunks = [];
-            file.on('data', (chunk) => chunks.push(chunk));
-            file.on('end', () => {
-                files.push({
-                    fieldname,
-                    buffer: Buffer.concat(chunks),
-                    filename,
-                });
-            });
-        });
-
-        busboy.on('field', (fieldname, val) => {
-            fields[fieldname] = val;
-        });
-
-        busboy.on('finish', () => {
-            resolve({ fields, files });
-        });
-        
-        busboy.on('error', err => {
-            reject(err);
-        });
-
-        const bodyBuffer = event.isBase64Encoded ? Buffer.from(event.body, 'base64') : Buffer.from(event.body, 'utf-8');
-        busboy.end(bodyBuffer);
-    });
 }
 
 // A função principal que a Netlify vai executar
@@ -77,11 +33,10 @@ exports.handler = async function(event, context) {
     // --- LÓGICA PARA CRIAR/ATUALIZAR MÚSICAS (POST) ---
     if (event.httpMethod === 'POST') {
         try {
-            console.log("Função POST iniciada.");
-            const { fields, files } = await parseMultipartForm(event);
-            console.log("Formulário processado. Campos:", fields, "Ficheiros:", files.length);
-
-            const { id, title, arranger } = fields;
+            // Usamos a nova ferramenta para processar o formulário. É muito mais simples.
+            const result = await parser.parse(event);
+            const { id, title, arranger } = result; // Os campos vêm diretamente no 'result'
+            const files = result.files;
             
             let musicData = { title, arranger };
             if (id && id !== 'undefined' && id !== 'null') {
@@ -91,10 +46,10 @@ exports.handler = async function(event, context) {
 
             for (const file of files) {
                 const sanitizedFileName = slugify(file.filename);
+                // A biblioteca organiza os ficheiros de forma diferente, por isso verificamos o 'fieldname'
                 if (file.fieldname === 'audioFile') {
                     const filePath = `audio/${Date.now()}_${sanitizedFileName}`;
-                    console.log(`Fazendo upload do áudio para: ${filePath}`);
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.buffer, { upsert: true });
+                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true });
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
                     musicData.audioUrl = urlData.publicUrl;
@@ -103,8 +58,7 @@ exports.handler = async function(event, context) {
                     const instrumentName = file.filename.replace(/\.pdf$/i, '').trim();
                     const sanitizedTitle = slugify(title);
                     const filePath = `partituras/${sanitizedTitle}/${sanitizedFileName}`;
-                    console.log(`Fazendo upload da partitura para: ${filePath}`);
-                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.buffer, { upsert: true });
+                    const { error } = await supabase.storage.from('arquivos').upload(filePath, file.content, { upsert: true });
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('arquivos').getPublicUrl(filePath);
                     
@@ -115,7 +69,6 @@ exports.handler = async function(event, context) {
                 }
             }
 
-            console.log("Salvando dados no banco de dados...");
             let responseData;
             if (id && id !== 'undefined' && id !== 'null') {
                 const { data, error } = await supabase.from('musicas').update(musicData).eq('id', id).select().single();
@@ -128,7 +81,6 @@ exports.handler = async function(event, context) {
                 responseData = data;
             }
             
-            console.log("Dados salvos com sucesso.");
             return { statusCode: 200, body: JSON.stringify(responseData) };
 
         } catch (error) {

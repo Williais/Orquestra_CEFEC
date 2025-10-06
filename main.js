@@ -265,7 +265,6 @@ musicForm.addEventListener('submit', async (e) => {
         if (signedUrls.audio) {
             const { token, signedUrl } = signedUrls.audio;
             uploadPromises.push(
-                // *** CORREÇÃO CRUCIAL AQUI: O método é 'PUT' ***
                 fetch(signedUrl, {
                     method: 'PUT',
                     headers: { 
@@ -282,7 +281,6 @@ musicForm.addEventListener('submit', async (e) => {
                 const { token, signedUrl } = pdfUrlData;
                 const originalFile = pdfFilesInput.files[pdfUrlData.originalFileIndex];
                 uploadPromises.push(
-                    // *** CORREÇÃO CRUCIAL AQUI: O método é 'PUT' ***
                     fetch(signedUrl, {
                         method: 'PUT',
                         headers: { 

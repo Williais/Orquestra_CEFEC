@@ -63,7 +63,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Evento de Ativação: Limpa caches antigos para manter tudo atualizado
+//Limpa caches antigos
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(

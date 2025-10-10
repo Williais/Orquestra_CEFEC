@@ -38,7 +38,8 @@ exports.handler = async function(event, context) {
                 if (audioFile) {
                     const sanitizedFileName = slugify(audioFile.name);
                     const path = `audio/${Date.now()}_${sanitizedFileName}`;
-                    const { data, error } = await supabase.storage.from('arquivos').createSignedUploadUrl(path);
+                    // *** CORREÇÃO AQUI: Adicionado { upsert: true } ***
+                    const { data, error } = await supabase.storage.from('arquivos').createSignedUploadUrl(path, { upsert: true });
                     if (error) throw error;
                     signedUrls.audio = data;
                     filePaths.audio = path;
@@ -52,7 +53,8 @@ exports.handler = async function(event, context) {
                         const sanitizedFileName = slugify(file.name);
                         const sanitizedTitle = slugify(title);
                         const path = `partituras/${sanitizedTitle}/${sanitizedFileName}`;
-                        const { data, error } = await supabase.storage.from('arquivos').createSignedUploadUrl(path);
+                         // *** CORREÇÃO AQUI: Adicionado { upsert: true } ***
+                        const { data, error } = await supabase.storage.from('arquivos').createSignedUploadUrl(path, { upsert: true });
                         if (error) throw error;
                         signedUrls.pdfs.push({ ...data, originalFileIndex: file.originalFileIndex });
                         filePaths.pdfs[instrumentName] = path;
@@ -65,14 +67,19 @@ exports.handler = async function(event, context) {
                 let { musicData } = payload;
                 const { id, audioPath, partiturasPaths } = musicData;
 
-                if (audioPath) {
-                    const { data } = supabase.storage.from('arquivos').getPublicUrl(audioPath);
+                if (id && id !== 'undefined' && id !== 'null') {
+                    const { data: oldData } = await supabase.from('musicas').select('*').eq('id', id).single();
+                    musicData = { ...oldData, ...musicData };
+                }
+                
+                if (musicData.audioPath) {
+                    const { data } = supabase.storage.from('arquivos').getPublicUrl(musicData.audioPath);
                     musicData.audioUrl = data.publicUrl;
                 }
-                if (partiturasPaths) {
+                if (musicData.partiturasPaths) {
                     musicData.partituras = musicData.partituras || {};
-                    for (const instrumentName in partiturasPaths) {
-                        const path = partiturasPaths[instrumentName];
+                    for (const instrumentName in musicData.partiturasPaths) {
+                        const path = musicData.partiturasPaths[instrumentName];
                         const { data } = supabase.storage.from('arquivos').getPublicUrl(path);
                         musicData.partituras[instrumentName] = data.publicUrl;
                     }
@@ -80,9 +87,7 @@ exports.handler = async function(event, context) {
                 
                 let responseData;
                 if (id && id !== 'undefined' && id !== 'null') {
-                    const { data: oldData } = await supabase.from('musicas').select('*').eq('id', id).single();
-                    const finalData = { ...oldData, ...musicData };
-                    const { data, error } = await supabase.from('musicas').update(finalData).eq('id', id).select().single();
+                    const { data, error } = await supabase.from('musicas').update(musicData).eq('id', id).select().single();
                     if (error) throw error;
                     responseData = data;
                 } else {

@@ -5,8 +5,7 @@ const urlsToCache = [
   '/style.css',
   '/main.js',
   '/manifest.json',
-  '/src/icon-192x192.png',
-  '/src/icon-512x512.png'
+  '/src/orquestra.png' // Verifique se o caminho do ícone está correto
 ];
 
 self.addEventListener('install', event => {
@@ -15,6 +14,8 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => {
       console.log('Cache aberto, adicionando o app shell.');
       return cache.addAll(urlsToCache);
+    }).catch(err => {
+      console.error('Falha ao adicionar ficheiros ao cache:', err);
     })
   );
 });
@@ -30,24 +31,20 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
   const url = new URL(event.request.url);
 
-  // Não cachear API (Vercel)
-  if (url.pathname.startsWith('/api/')) return;
-
-  // (opcional) manter compat com legado Netlify:
-  if (url.pathname.includes('/.netlify/functions/')) return;
+  // Não cachear a API
+  if (url.pathname.startsWith('/api/')) {
+    return; // Deixa a requisição passar para a rede
+  }
 
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
       });
     })

@@ -1,3 +1,0 @@
-[build]
-  # Diretório onde as nossas funções serverless vivem
-  functions = "netlify/functions"

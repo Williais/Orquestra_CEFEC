@@ -31,7 +31,8 @@ async function fetchAndRenderMusic() {
     initialMessage.innerHTML = '<p>Carregando músicas...</p>';
     initialMessage.style.display = 'block';
     try {
-        const response = await fetch('/.netlify/functions/musicas');
+        // CORREÇÃO: Usar o caminho da Vercel
+        const response = await fetch('/api/musicas');
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.error || 'Erro de rede');
@@ -165,7 +166,8 @@ musicListContainer.addEventListener('click', async (e) => {
         if (confirm('Tem certeza de que deseja apagar esta música? Esta ação é irreversível.')) {
             try {
                 const musicToDelete = localMusicList.find(m => m.id == id);
-                const response = await fetch('/.netlify/functions/musicas', {
+                // CORREÇÃO: Usar o caminho da Vercel
+                const response = await fetch('/api/musicas', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -253,7 +255,8 @@ musicForm.addEventListener('submit', async (e) => {
             filesToRequest.pdfFiles = Array.from(pdfFilesInput.files).map((file, index) => ({ name: file.name, originalFileIndex: index }));
         }
 
-        const urlResponse = await fetch('/.netlify/functions/musicas', {
+        // CORREÇÃO: Usar o caminho da Vercel
+        const urlResponse = await fetch('/api/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'generate-signed-urls', ...filesToRequest })
@@ -296,7 +299,8 @@ musicForm.addEventListener('submit', async (e) => {
 
         await Promise.all(uploadPromises);
 
-        const saveResponse = await fetch('/.netlify/functions/musicas', {
+        // CORREÇÃO: Usar o caminho da Vercel
+        const saveResponse = await fetch('/api/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'save-music', musicData })

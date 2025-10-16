@@ -2,6 +2,8 @@
   "name": "orquestra-pwa-backend",
   "version": "1.0.0",
   "description": "Funções serverless para o PWA da Orquestra",
+  "type": "module",
+  "engines": { "node": ">=18" },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4"
   }

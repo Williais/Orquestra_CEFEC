@@ -28,22 +28,27 @@ const modalTitle = document.getElementById('modal-title');
 const musicIdInput = document.getElementById('music-id');
 
 async function fetchAndRenderMusic() {
-    initialMessage.innerHTML = '<p>Carregando músicas...</p>';
-    initialMessage.style.display = 'block';
-    try {
-        // CORREÇÃO: Usar o caminho da Vercel
-        const response = await fetch('/api/musicas');
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || 'Erro de rede');
-        }
-        const musicas = await response.json();
-        localMusicList = musicas;
-        renderMusicList(localMusicList);
-    } catch (error) {
-        console.error("Erro ao buscar músicas:", error);
-        initialMessage.innerHTML = `<p style="color: red;">Não foi possível carregar as músicas. Erro: ${error.message}</p>`;
+  initialMessage.innerHTML = '<p>Carregando músicas...</p>';
+  initialMessage.style.display = 'block';
+
+  try {
+    const response = await fetch('/api/musicas');
+
+    const raw = await response.text(); // lê sempre como texto
+    if (!response.ok) {
+      let msg;
+      try { msg = JSON.parse(raw)?.error; } catch {}
+      throw new Error(msg || `HTTP ${response.status} — ${raw.slice(0, 200)}`);
     }
+
+    const musicas = JSON.parse(raw);
+    localMusicList = musicas;
+    renderMusicList(localMusicList);
+    initialMessage.style.display = 'none';
+  } catch (error) {
+    console.error('Erro ao buscar músicas:', error);
+    initialMessage.innerHTML = `<p style="color: red;">Não foi possível carregar as músicas. Erro: ${error.message}</p>`;
+  }
 }
 
 function renderMusicList(musicas) {
@@ -299,7 +304,6 @@ musicForm.addEventListener('submit', async (e) => {
 
         await Promise.all(uploadPromises);
 
-        // CORREÇÃO: Usar o caminho da Vercel
         const saveResponse = await fetch('/api/musicas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

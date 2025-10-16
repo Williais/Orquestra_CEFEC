@@ -33,23 +33,21 @@ async function fetchAndRenderMusic() {
 
   try {
     const response = await fetch('/api/musicas');
-
-    const raw = await response.text(); // lê sempre como texto
+    const raw = await response.text();
     if (!response.ok) {
-      let msg;
-      try { msg = JSON.parse(raw)?.error; } catch {}
+      let msg; try { msg = JSON.parse(raw)?.error; } catch {}
       throw new Error(msg || `HTTP ${response.status} — ${raw.slice(0, 200)}`);
     }
-
     const musicas = JSON.parse(raw);
     localMusicList = musicas;
     renderMusicList(localMusicList);
     initialMessage.style.display = 'none';
   } catch (error) {
     console.error('Erro ao buscar músicas:', error);
-    initialMessage.innerHTML = `<p style="color: red;">Não foi possível carregar as músicas. Erro: ${error.message}</p>`;
+    initialMessage.innerHTML = `<p style="color: #9b2323;">Não foi possível carregar as músicas. Erro: ${error.message}</p>`;
   }
 }
+
 
 function renderMusicList(musicas) {
     if (musicas.length === 0 && document.getElementById('search-input').value === '') {

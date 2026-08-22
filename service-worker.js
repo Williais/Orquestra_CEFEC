@@ -1,4 +1,4 @@
-const CACHE_NAME = 'orquestra-cefec-cache-v2';
+const CACHE_NAME = 'orquestra-cefec-cache-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -36,6 +36,10 @@ self.addEventListener('fetch', event => {
   if (url.pathname.startsWith('/api/')) {
     return;
   }
+
+  if (!event.request.url.startsWith('http')) return;
+
+  if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
     caches.match(event.request).then(cached => {

@@ -3,25 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioteca da Orquestra</title>
+    <title>Biblioteca Digital | OFC</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3498db"/>
+    <meta name="theme-color" content="#0f172a"/>
     <link rel="apple-touch-icon" href="src/orquestra.png">
     <link rel="shortcut icon" href="src/orquestra.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
+<body class="dark-mode">
 
     <div class="app-container">
         <main id="main-view">
             <header class="app-header">
                 <div class="header-top">
-                    <h1 class="orchestra-title">Orquestra Filarmônica do CEFEC</h1>
-                    <button class="theme-switcher" id="theme-switcher-btn">🌙</button>
+                    <div class="brand-container">
+                        <img src="src/orquestra.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+                        <h1 class="orchestra-title">Biblioteca Digital</h1>
+                    </div>
+                    <button class="theme-switcher" id="theme-switcher-btn"><i class="fas fa-sun"></i></button>
                 </div>
-                <input type="search" id="search-input" class="search-bar" placeholder="Pesquisar música...">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="search" id="search-input" class="search-bar" placeholder="Buscar peça, arranjador ou instrumento...">
+                </div>
             </header>
+
             <div id="music-list">
                 <div id="initial-message" class="initial-message">
                     <p>Carregando músicas...</p>
@@ -38,18 +48,17 @@
                 </div>
             </div>
             <div class="instrument-selector">
-                <label for="instrument-select">Selecione o Instrumento:</label>
                 <select id="instrument-select">
-                    </select>
+                </select>
             </div>
             <div class="pdf-viewer-container">
-                 <iframe id="pdf-viewer" title="Visualizador de Partitura"></iframe>
+                 <iframe id="pdf-viewer" title="Visualizador de Partitura" style="width: 100%; height: 70vh; border: none; border-radius: 12px; background-color: var(--surface-color);"></iframe>
             </div>
             <div id="no-pdf-message" class="no-pdf hidden">
-                <p>Nenhuma partitura encontrada para a seleção.</p>
+                <p style="text-align: center; padding: 2rem; color: var(--text-muted);">Nenhuma partitura encontrada para a seleção.</p>
             </div>
-            <div class="details-actions">
-                 <a id="download-pdf-btn" class="action-button download-btn" href="#" download target="_blank">
+            <div class="details-actions" style="margin-top: 1rem;">
+                 <a id="download-pdf-btn" class="action-button download-btn" href="#" download target="_blank" style="display: none;">
                     <i class="fas fa-download"></i> Baixar PDF
                  </a>
             </div>
@@ -78,19 +87,19 @@
                 <div class="form-group">
                     <label for="music-audio">Áudio da Música (Opcional)</label>
                     <input type="file" id="music-audio" accept="audio/*">
-                    <span id="current-audio-file" class="current-file-name"></span>
+                    <span id="current-audio-file" class="current-file-name" style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 0.5rem;"></span>
                 </div>
                 <div class="form-group">
                     <label for="music-pdfs">Partituras (PDFs)</label>
                     <input type="file" id="music-pdfs" accept=".pdf" multiple>
-                    <small style="color: var(--text-muted-color)">Dica: Nomeie cada PDF como "Instrumento.pdf" (ex: "Violino I.pdf")</small>
-                    <div id="current-pdfs-list" class="current-files-list"></div>
+                    <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Dica: Nomeie cada PDF como "Instrumento.pdf" (ex: "Violino I.pdf")</small>
+                    <div id="current-pdfs-list" class="current-files-list" style="margin-top: 0.5rem; font-size: 0.85rem;"></div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="action-button cancel-btn" id="cancel-btn">Cancelar</button>
-                    <button type="submit" class="action-button" id="save-music-btn">Salvar</button>
+                <div class="modal-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="action-button cancel-btn" id="cancel-btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-main);">Cancelar</button>
+                    <button type="submit" class="action-button" id="save-music-btn" style="background: var(--primary); color: white;">Salvar</button>
                 </div>
-                 <div id="loading-indicator" class="loading-indicator hidden">Salvando...</div>
+                 <div id="loading-indicator" class="loading-indicator hidden" style="text-align: center; margin-top: 1rem; color: var(--primary);">Salvando...</div>
             </form>
         </div>
     </div>
@@ -101,10 +110,9 @@
             <span id="now-playing-title"></span>
         </div>
         <audio id="audio-player" controls></audio>
-        <button id="close-player-btn" class="close-player-btn" title="Fechar Player">&times;</button>
+        <button id="close-player-btn" class="close-player-btn" title="Fechar Player" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
     </div>
 
- 
     <script src="main.js" type="module"></script>
 </body>
 </html>

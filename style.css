@@ -1,63 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
-/* --- CSS Reset & Variáveis de Tema --- */
 :root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --background-color: #f8f9fa;
+
+    --bg-color: #f8fafc;
     --surface-color: #ffffff;
-    --text-color: #212529;
-    --text-muted-color: #6c757d;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --font-family: 'Inter', sans-serif;
+    --surface-blur: rgba(255, 255, 255, 0.85);
+    
+    --primary: #4361ee;
+    --primary-hover: #3a56d4;
+    --primary-light: #eff2fe;
+    
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 10px 25px rgba(67, 97, 238, 0.15);
+    
+    --font-ui: 'Poppins', sans-serif;
+    --radius-lg: 20px;
+    --radius-md: 12px;
 }
 
 body.dark-mode {
-    --primary-color: #3b82f6;
-    --secondary-color: #9ca3af;
-    --background-color: #111827;
-    --surface-color: #1f2937;
-    --text-color: #f9fafb;
-    --text-muted-color: #9ca3af;
-    --shadow-color: rgba(0, 0, 0, 0.25);
+    --bg-color: #0b0f19;
+    --surface-color: #151b2b;
+    --surface-blur: rgba(21, 27, 43, 0.85);
+    
+    --primary: #4cc9f0;
+    --primary-hover: #3ab1d6;
+    --primary-light: rgba(76, 201, 240, 0.1);
+    
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+    
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 10px 25px rgba(76, 201, 240, 0.1);
 }
 
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: var(--font-family);
-    background-color: var(--background-color);
-    color: var(--text-color);
+    font-family: var(--font-ui);
+    background-color: var(--bg-color);
+    color: var(--text-main);
     transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* --- Estrutura Principal & Utilitários --- */
 .app-container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 0 1.2rem;
 }
+.hidden { display: none !important; }
 
-.hidden {
-    display: none !important;
-}
-
-/* --- Header --- */
 .app-header {
-    background-color: var(--surface-color);
-    padding: 1rem;
-    box-shadow: 0 2px 4px var(--shadow-color);
+    background: var(--surface-blur);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1.25rem 0;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.2rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .header-top {
@@ -66,56 +75,96 @@ body {
     align-items: center;
 }
 
+.brand-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
 .orchestra-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--text-main);
+    letter-spacing: -0.5px;
 }
 
 .theme-switcher {
-    background: none;
-    border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
-    width: 36px;
-    height: 36px;
+    background: var(--primary-light);
+    border: none;
+    color: var(--primary);
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.2s;
+}
+.theme-switcher:hover { transform: scale(1.1); }
+
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
 }
 
 .search-bar {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--secondary-color);
-    border-radius: 20px;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font-size: 1rem;
+    padding: 1rem 1rem 1rem 2.8rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background-color: var(--surface-color);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-family: var(--font-ui);
+    transition: all 0.3s;
 }
 
-/* --- Lista de Músicas --- */
+.search-bar:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
 #music-list {
-    padding: 1.5rem 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    padding: 2rem 0 6rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
 .music-card {
     background-color: var(--surface-color);
-    border-radius: 12px;
-    padding: 1.25rem;
-    box-shadow: 0 4px 6px var(--shadow-color);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
 }
 
 .music-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 12px var(--shadow-color);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary);
 }
 
 .music-card-header {
@@ -124,119 +173,96 @@ body {
     align-items: flex-start;
 }
 
-.music-card h2 {
+.music-card-info h2 {
     font-size: 1.25rem;
+    font-weight: 600;
     margin-bottom: 0.25rem;
+    line-height: 1.3;
 }
 
-.music-card h5 {
-    font-size: 0.9rem;
-    color: var(--text-muted-color);
+.music-card-info h5 {
+    font-size: 0.85rem;
     font-weight: 400;
-}
-
-.music-card-actions {
-    display: flex;
-    gap: 0.5rem;
+    color: var(--text-muted);
 }
 
 .music-card-menu-btn {
-    background: none;
+    background: transparent;
     border: none;
-    color: var(--text-muted-color);
-    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
     cursor: pointer;
     padding: 0.5rem;
+    transition: color 0.2s;
 }
+.music-card-menu-btn:hover { color: var(--primary); }
 
-.music-card-menu {
-    position: absolute;
-    background-color: var(--surface-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    padding: 0.5rem 0;
-    right: 1.5rem;
-    margin-top: 2rem;
-    z-index: 5;
+.tags-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
 }
-
-.music-card-menu button {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1.5rem;
-    background: none;
-    border: none;
-    text-align: left;
-    color: var(--text-color);
-    cursor: pointer;
+.tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-
-.music-card-menu button:hover {
-    background-color: var(--background-color);
-}
+.tag-regional { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.tag-completa { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.tag-classico { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.tag-filme { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
 
 .music-card-footer {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--background-color);
+    margin-top: 1.5rem;
     display: flex;
     gap: 0.75rem;
 }
 
 .action-button {
     flex: 1;
-    padding: 0.75rem;
-    border-radius: 8px;
+    padding: 0.8rem;
+    border-radius: var(--radius-md);
     border: none;
-    font-weight: 500;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background-color 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    transition: all 0.2s;
 }
 
 .listen-btn {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--primary);
+    color: #fff;
+}
+.listen-btn:hover:not(:disabled) { background-color: var(--primary-hover); }
+.listen-btn:disabled {
+    background-color: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
 }
 
 .download-btn {
-    background-color: transparent;
-    border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+.download-btn:hover {
+    background-color: var(--primary);
+    color: #fff;
 }
 
-.listen-btn:disabled {
-        background-color: var(--secondary-color);
-        cursor: not-allowed;
-}
-
-
-/* --- Botão Flutuante --- */
-.fab {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 56px;
-    height: 56px;
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: 50%;
-    border: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    font-size: 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 20;
-}
-
-/* --- Tela de Detalhes (Partituras) --- */
 #details-view {
-    padding-top: 1rem;
+    padding-top: 1.5rem;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .details-header {
@@ -247,181 +273,68 @@ body {
 }
 
 .back-btn {
-    background: none;
-    border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
-    width: 40px;
-    height: 40px;
+    background: var(--surface-color);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
-}
-
-#details-title {
-    font-size: 1.5rem;
-}
-
-.instrument-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.instrument-selector label {
-    font-weight: 500;
-    color: var(--text-muted-color);
-}
-
-.instrument-selector select {
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: 1px solid var(--secondary-color);
-    background-color: var(--surface-color);
-    color: var(--text-color);
-    font-size: 1rem;
-}
-
-#pdf-viewer {
-    width: 100%;
-    height: 70vh;
-    border: 1px solid var(--secondary-color);
-    border-radius: 8px;
-}
-
-.no-pdf {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-muted-color);
-}
-
-/* --- Modal de Adicionar/Editar Música --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-soft);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 30;
 }
 
-.modal-content {
+.details-title-container h2 { font-size: 1.4rem; font-weight: 600; }
+.details-title-container h5 { font-weight: 400; color: var(--text-muted); }
+
+.instrument-selector select {
+    width: 100%;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
     background-color: var(--surface-color);
-    padding: 2rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 1rem;
+    appearance: none;
     margin-bottom: 1.5rem;
 }
 
-.modal-header h3 {
-    font-size: 1.5rem;
-}
-
-.close-modal-btn {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        color: var(--text-muted-color);
-        cursor: pointer;
-}
-
-.form-group {
-    margin-bottom: 1.25rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.form-group input, .form-group .file-drop-area {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--secondary-color);
-    border-radius: 8px;
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
-.file-drop-area {
-    border-style: dashed;
-    text-align: center;
-    color: var(--text-muted-color);
-}
-
-.modal-actions {
+.mock-pdf-area {
+    background-color: var(--surface-color);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    height: 60vh;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
     gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 1.5rem;
 }
+.mock-pdf-icon { font-size: 4rem; color: var(--border); }
 
-#save-music-btn {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.audio-player-container {
+.fab {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--surface-color-light);
-    border-top: 1px solid var(--border-color-light);
-    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1.5rem;
-    z-index: 1500;
-    transition: transform 0.3s ease-in-out;
-}
-body.dark-mode .audio-player-container {
-    background-color: var(--surface-color-dark);
-    border-top-color: var(--border-color-dark);
-}
-.audio-player-container.hidden {
-    transform: translateY(100%);
-}
-#now-playing {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-weight: 600;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-#now-playing i {
-    color: var(--primary-color);
-}
-#audio-player {
-    flex-grow: 1;
-    max-width: 500px; /* Limita a largura em telas grandes */
-}
-.close-player-btn {
-    background: none;
+    bottom: 2rem;
+    right: 2rem;
+    width: 64px;
+    height: 64px;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
     border: none;
-    font-size: 1.8rem;
-    color: var(--text-muted-color-light);
+    box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 0 0 0 1rem;
+    z-index: 20;
+    transition: transform 0.2s;
 }
-body.dark-mode .close-player-btn {
-    color: var(--text-muted-color-dark);
-}
+.fab:hover { transform: scale(1.08); }

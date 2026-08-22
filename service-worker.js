@@ -5,7 +5,7 @@ const urlsToCache = [
   '/style.css',
   '/main.js',
   '/manifest.json',
-  '/src/orquestra.png' // Verifique se o caminho do ícone está correto
+  '/src/orquestra.png'
 ];
 
 self.addEventListener('install', event => {
@@ -33,9 +33,8 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Não cachear a API
   if (url.pathname.startsWith('/api/')) {
-    return; // Deixa a requisição passar para a rede
+    return;
   }
 
   event.respondWith(
